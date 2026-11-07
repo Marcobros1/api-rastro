@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { ObjectId } from "mongodb";
 import { listingsCollection } from "../db";
 
 const router = Router();
