@@ -1,0 +1,89 @@
+# ============================================================
+# CI MÍNIMO
+# Revisa el código cada vez que subes cambios a main
+# y cada vez que abres (o actualizas) una pull request a main.
+#
+# Hace dos comprobaciones:
+#   1. htmlhint -> revisa los ficheros .html
+#   2. lint     -> revisa el código JavaScript / TypeScript
+#
+# Dónde va este fichero:  .github/workflows/ci.yml
+# ============================================================
+
+# Nombre que verás en la pestaña "Actions" de GitHub
+name: ci
+
+# CUÁNDO se ejecuta
+on:
+  push:
+    branches: [main]   # cuando subes (push) cambios a main
+  pull_request:
+    branches: [main]   # cuando abres una PR hacia main
+
+# Permisos: solo puede LEER el código, no puede cambiar nada
+permissions:
+  contents: read
+
+# QUÉ hace. Hay dos trabajos (jobs). Cada uno es un "check"
+# que verás con un ✅ o un ❌ en GitHub.
+jobs:
+
+  # ---------- Check 1: HTMLHint ----------
+  htmlhint:
+    runs-on: ubuntu-latest   # un ordenador Linux que nos presta GitHub
+    steps:
+      # 1. Descarga el código del repositorio en ese ordenador
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      # 2. Instala Node.js (para poder usar npx)
+      - name: Preparar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # 3. Revisa todos los .html del proyecto con las reglas de .htmlhint
+      #    No revisa node_modules, dist, build ni coverage.
+      #    Si el proyecto no tiene .html (una API), dice "Scanned 0 files" y pasa.
+      - name: Revisar el HTML con HTMLHint
+        run: npx --yes htmlhint@1 "**/*.html" --ignore "dist/**,build/**,coverage/**"
+
+  # ---------- Check 2: lint ----------
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Descarga el código
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      # 2. Instala Node.js y guarda las dependencias en caché (va más rápido)
+      - name: Preparar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # 3. Instala las dependencias EXACTAS de package-lock.json
+      #    (por eso package-lock.json tiene que estar subido al repositorio)
+      - name: Instalar dependencias
+        run: npm ci
+
+      # 4. Ejecuta el script "lint" de tu package.json
+      #    React -> oxlint   |   Express y NestJS -> ESLint
+      - name: Lint
+        run: npm run lint
+
+      # 5. BUILD (opcional). Compila el proyecto para comprobar que no hay
+      #    errores de TypeScript.
+      #    Si tu proyecto es TypeScript (React con TS, Express con TS o NestJS),
+      #    quita el # de las dos líneas de abajo.
+      # - name: Build
+      #   run: npm run build
+
+      # 6. TESTS (todavía NO se usan en este CI mínimo).
+      #    Cuando demos testing, quita el # de las dos líneas de abajo.
+      #    React -> Vitest  |  NestJS -> Jest. En los dos casos es "npm test".
+      #    (Vitest no se queda esperando: en GitHub detecta que está en un CI
+      #    y pasa los tests una sola vez.)
+      # - name: Tests
+      #   run: npm test
