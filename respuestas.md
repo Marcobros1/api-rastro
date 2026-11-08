@@ -11,4 +11,6 @@ En MongoDB esa comparación es estricta por tipo, así que no hay coincidencia.
 
 Lo que hace find(req.query) es pasar esos strings tal cual a la consulta, sin convertirlos al tipo del campo.
 
+## Pregunta 3: ¿por qué la API ignora views y status si el cliente los envía? ¿Qué podría hacer alguien si no los ignorara?
 
+El servidor decide qué se guarda, así que la API ignora views y status, porque crea el anuncio campo a campo y esos valores nunca llegan a la base de datos. Si los aceptara, cualquiera podría inflar las visitas, cambiar el estado sin pasar por las reglas del negocio, manipular la fecha o publicar a nombre de otro vendedor, un problema que (tras investigarlo) se llama mass assignment (el cliente escribe campos que no le corresponden) y se evita con una lista blanca de campos.
