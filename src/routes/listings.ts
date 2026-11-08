@@ -99,4 +99,55 @@ router.post("/", async (req, res) => {
   res.status(201).json({ _id: result.insertedId, ...newListing });
 });
 
+// ---------- PATCH /api/listings/:id (cambiar precio) ----------
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    res.status(400).json({ error: "El id del anuncio no es válido" });
+    return;
+  }
+
+  const body = req.body ?? {};
+  const { price } = body;
+
+  if (typeof price !== "number" || Number.isNaN(price) || price < 0) {
+    res.status(400).json({ error: "price debe ser un número mayor o igual que 0" });
+    return;
+  }
+
+  // Solo se toca price; cualquier otro campo del body se ignora
+  const listing = await listingsCollection().findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: { price } },
+    { returnDocument: "after" }
+  );
+
+  if (!listing) {
+    res.status(404).json({ error: "Anuncio no encontrado" });
+    return;
+  }
+
+  res.json(listing);
+});
+
+// ---------- DELETE /api/listings/:id (borrar anuncio) ----------
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    res.status(400).json({ error: "El id del anuncio no es válido" });
+    return;
+  }
+
+  const result = await listingsCollection().deleteOne({ _id: new ObjectId(id) });
+
+  if (result.deletedCount === 0) {
+    res.status(404).json({ error: "Anuncio no encontrado" });
+    return;
+  }
+
+  res.status(204).end();
+});
+
 export default router;
