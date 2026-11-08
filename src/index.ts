@@ -7,15 +7,17 @@ import { ObjectId } from "mongodb";
 const app = express();
 const PORT = 3000;
 
-app.use("/api/listings", listingsRouter);
 // 1. Registrar cada petición en la terminal
 app.use((req, _res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
 
-// 2. Leer bodies JSON
+// 2. Leer bodies JSON (antes de las rutas, para que los routers también lo reciban)
 app.use(express.json());
+
+// 3. Rutas
+app.use("/api/listings", listingsRouter);
 
 // 3. Rutas
 app.get("/api/health", async (_req, res) => {
