@@ -2,6 +2,7 @@ import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import { connectDb, getDb, listingsCollection } from "./db";
 import listingsRouter from "./routes/listings";
+import offersRouter from "./routes/offers";
 import { ObjectId } from "mongodb";
 
 const app = express();
@@ -18,8 +19,8 @@ app.use(express.json());
 
 // 3. Rutas
 app.use("/api/listings", listingsRouter);
+app.use("/api/offers", offersRouter);
 
-// 3. Rutas
 app.get("/api/health", async (_req, res) => {
   await getDb().command({ ping: 1 }); // pregunta a MongoDB "¿estás ahí?"
   res.json({ status: "ok", db: getDb().databaseName });

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ObjectId } from "mongodb";
 import type { Filter } from "mongodb";
-import { listingsCollection, usersCollection } from "../db";
+import { listingsCollection, offersCollection, usersCollection } from "../db";
 import type { Listing } from "../types";
 
 const router = Router();
@@ -97,6 +97,29 @@ router.post("/", async (req, res) => {
   const result = await listingsCollection().insertOne(newListing);
 
   res.status(201).json({ _id: result.insertedId, ...newListing });
+});
+
+// ---------- GET /api/listings/:id/offers (ofertas de un anuncio) ----------
+router.get("/:id/offers", async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    res.status(400).json({ error: "El id del anuncio no es válido" });
+    return;
+  }
+
+  const listing = await listingsCollection().findOne({ _id: new ObjectId(id) });
+  if (!listing) {
+    res.status(404).json({ error: "Anuncio no encontrado" });
+    return;
+  }
+
+  const offers = await offersCollection()
+    .find({ "listing.id": new ObjectId(id) })
+    .sort({ createdAt: -1 })
+    .toArray();
+
+  res.json(offers);
 });
 
 // ---------- PATCH /api/listings/:id (cambiar precio) ----------
