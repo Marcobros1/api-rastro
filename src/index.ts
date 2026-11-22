@@ -6,7 +6,20 @@ import offersRouter from "./routes/offers";
 import { ObjectId } from "mongodb";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ?? 3000;
+
+// CORS: deja que la web de React llame a la API
+const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:5173";
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", CORS_ORIGIN);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 
 // 1. Registrar cada petición en la terminal
 app.use((req, _res, next) => {
