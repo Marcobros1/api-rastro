@@ -173,4 +173,15 @@ router.delete("/:id", async (req, res) => {
   res.status(204).end();
 });
 
+// ---------- GET /api/listings/stats (estadísticas por categoría) ----------
+router.get("/stats", async (_req, res) => {
+  const stats = await listingsCollection()
+    .aggregate([
+      { $group: { _id: "$category", total: { $sum: 1 } } },
+      { $sort: { total: -1 } },
+    ])
+    .toArray();
+  res.json(stats);
+});
+
 export default router;

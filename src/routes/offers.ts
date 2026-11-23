@@ -59,4 +59,42 @@ router.post("/", async (req, res) => {
   res.status(201).json({ _id: result.insertedId, ...offer });
 });
 
+// ---------- PATCH /api/offers/:id (aceptar o rechazar oferta) ----------
+router.patch("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body ?? {};
+
+  if (!isObjectIdString(id)) {
+    res.status(400).json({ error: "El id de la oferta no es válido" });
+    return;
+  }
+
+  if (status !== "ACCEPTED" && status !== "REJECTED") {
+    res.status(400).json({ error: "El estado debe ser ACCEPTED o REJECTED" });
+    return;
+  }
+
+  const offer = await offersCollection().findOne({ _id: new ObjectId(id) });
+  if (!offer) {
+    res.status(404).json({ error: "La oferta no existe" });
+    return;
+  }
+
+  // Si se acepta, el anuncio pasa a RESERVED
+  if (status === "ACCEPTED") {
+    await listingsCollection().findOneAndUpdate(
+      { _id: new ObjectId(offer.listing.id) },
+      { $set: { status: "RESERVED" } }
+    );
+  }
+
+  await offersCollection().findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: { status } }
+  );
+
+  const updated = await offersCollection().findOne({ _id: new ObjectId(id) });
+  res.json(updated);
+});
+
 export default router;
